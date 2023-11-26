@@ -9,6 +9,16 @@ library(rvest)
 scrape_investments_tab <- function(filenames){
   map_dfr(filenames, \(filename){
     html <- read_html(filename)
+    fund_name <- html |> 
+      html_element(".headline__title") |> 
+      html_text() |> 
+      str_trim()
+    company_ids <- html |> 
+      html_elements("#search-results-data-table-left") |> 
+      html_elements("#search-results-data-table-fixed-table") |> 
+      html_elements("span.number") |> 
+      html_text()
+    
     company_names <- html |> 
       html_elements("#search-results-data-table-left") |> 
       html_elements("#search-results-data-table-fixed-table") |> 
@@ -31,8 +41,10 @@ scrape_investments_tab <- function(filenames){
           as.list() |> 
           as_tibble()
       }) |> 
-      mutate(`Company Name` = company_names) |> 
-      select(`Company Name`, everything())
+      mutate(fund_name = fund_name,
+             `Company Name` = company_names,
+             company_id = company_ids) |> 
+      select(fund_name, `Company Name`, everything())
     
     return(results)
   })
